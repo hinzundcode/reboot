@@ -35,12 +35,16 @@ def main():
 	soc_core_args(parser)
 	trellis_args(parser)
 	
+	parser.set_defaults(
+		output_dir="build",
+		csr_csv="build/csr.csv"
+	)
+	
 	args = parser.parse_args()
 	
 	soc = SoC(**soc_core_argdict(args))
 	
 	builder = Builder(soc,
-		#csr_csv="csr.csv",
 		**builder_argdict(args))
 	
 	if args.build:
