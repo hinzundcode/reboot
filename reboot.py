@@ -48,11 +48,8 @@ def main():
 	builder = Builder(soc,
 		**builder_argdict(args))
 	
-	#print(trellis_argdict(args))
-	#exit()
-	
 	if args.build:
-		builder.build(**trellis_argdict(args), run=args.build)
+		builder.build(**trellis_argdict(args))
 	
 	if args.load or args.flash:
 		prog = OpenFPGALoader("ecpix5")
