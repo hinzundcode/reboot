@@ -22,10 +22,10 @@ from litex_boards.targets.ecpix5 import _CRG
 
 from litex.build.openfpgaloader import OpenFPGALoader
 
+from platform import ECPIX545Platform
+
 class SoC(SoCCore):
-	def __init__(self, sys_clk_freq=int(75e6), **kwargs):
-		platform = ecpix5.Platform(toolchain="trellis")
-		
+	def __init__(self, platform, sys_clk_freq=int(75e6), **kwargs):
 		SoCCore.__init__(self, platform, sys_clk_freq, **kwargs)
 		
 		self.submodules.crg = _CRG(platform, sys_clk_freq)
@@ -45,6 +45,7 @@ class SoC(SoCCore):
 				l2_cache_min_data_width = kwargs.get("min_l2_data_width", 128),
 				l2_cache_reverse        = True
 		)
+		
 
 def main():
 	parser = argparse.ArgumentParser()
@@ -63,7 +64,8 @@ def main():
 	
 	args = parser.parse_args()
 	
-	soc = SoC(**soc_core_argdict(args))
+	platform = ECPIX545Platform(toolchain="trellis")
+	soc = SoC(platform, **soc_core_argdict(args))
 	
 	builder = Builder(soc,
 		**builder_argdict(args))
@@ -72,7 +74,7 @@ def main():
 		builder.build(**trellis_argdict(args))
 	
 	if args.load or args.flash:
-		prog = OpenFPGALoader("ecpix5")
+		prog = soc.platform.create_programmer()
 		prog.load_bitstream(os.path.join(builder.gateware_dir, soc.platform.name + ".bit"), args.flash)
 
 if __name__ == "__main__":
