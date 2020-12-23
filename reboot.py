@@ -26,6 +26,8 @@ from litex.soc.cores.gpio import GPIOOut
 
 from platform import ECPIX545Platform
 
+from rgb import RGBLed
+
 class SoC(SoCCore):
 	def __init__(self, platform, sys_clk_freq=int(75e6), **kwargs):
 		SoCCore.__init__(self, platform, sys_clk_freq, **kwargs)
@@ -48,13 +50,14 @@ class SoC(SoCCore):
 				l2_cache_reverse        = True
 		)
 		
-		self.submodules.rgb = GPIOOut(Cat(
-			*platform.request("rgb_led", 0).flatten(),
-			*platform.request("rgb_led", 1).flatten(),
-			*platform.request("rgb_led", 2).flatten(),
-			*platform.request("rgb_led", 3).flatten(),
-		))
-		self.add_csr("rgb")
+		self.submodules.rgb0 = RGBLed(platform.request("rgb_led", 0))
+		self.add_csr("rgb0")
+		self.submodules.rgb1 = RGBLed(platform.request("rgb_led", 1))
+		self.add_csr("rgb1")
+		self.submodules.rgb2 = RGBLed(platform.request("rgb_led", 2))
+		self.add_csr("rgb2")
+		self.submodules.rgb3 = RGBLed(platform.request("rgb_led", 3))
+		self.add_csr("rgb3")
 
 def main():
 	parser = argparse.ArgumentParser()

@@ -1,27 +1,19 @@
 #include <rgb.h>
 #include <generated/csr.h>
 
-void rgb_init() {
-	rgb_out_write(0b111111111111);
-}
-
 void rgb_set(uint8_t led, uint8_t r, uint8_t g, uint8_t b) {
-	uint32_t reg = rgb_out_read();
-	
-	uint8_t offset = led * 3;
-	reg |= 0b111 << offset;
-	
-	if (r > 0) {
-		reg &= ~(1 << offset << 0);
+	switch (led) {
+		case RGB_LED0:
+			rgb0_control_write(b << CSR_RGB0_CONTROL_B_OFFSET | g << CSR_RGB0_CONTROL_G_OFFSET | r << CSR_RGB0_CONTROL_R_OFFSET);
+			break;
+		case RGB_LED1:
+			rgb1_control_write(b << CSR_RGB1_CONTROL_B_OFFSET | g << CSR_RGB1_CONTROL_G_OFFSET | r << CSR_RGB1_CONTROL_R_OFFSET);
+			break;
+		case RGB_LED2:
+			rgb2_control_write(b << CSR_RGB2_CONTROL_B_OFFSET | g << CSR_RGB2_CONTROL_G_OFFSET | r << CSR_RGB2_CONTROL_R_OFFSET);
+			break;
+		case RGB_LED3:
+			rgb3_control_write(b << CSR_RGB3_CONTROL_B_OFFSET | g << CSR_RGB3_CONTROL_G_OFFSET | r << CSR_RGB3_CONTROL_R_OFFSET);
+			break;
 	}
-	
-	if (g > 0) {
-		reg &= ~(1 << offset << 1);
-	}
-	
-	if (b > 0) {
-		reg &= ~(1 << offset << 2);
-	}
-	
-	rgb_out_write(reg);
 }
