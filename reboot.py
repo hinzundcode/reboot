@@ -22,6 +22,8 @@ from litex_boards.targets.ecpix5 import _CRG
 
 from litex.build.openfpgaloader import OpenFPGALoader
 
+from litex.soc.cores.gpio import GPIOOut
+
 from platform import ECPIX545Platform
 
 class SoC(SoCCore):
@@ -46,6 +48,13 @@ class SoC(SoCCore):
 				l2_cache_reverse        = True
 		)
 		
+		self.submodules.rgb = GPIOOut(Cat(
+			*platform.request("rgb_led", 0).flatten(),
+			*platform.request("rgb_led", 1).flatten(),
+			*platform.request("rgb_led", 2).flatten(),
+			*platform.request("rgb_led", 3).flatten(),
+		))
+		self.add_csr("rgb")
 
 def main():
 	parser = argparse.ArgumentParser()

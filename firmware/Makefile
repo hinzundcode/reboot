@@ -5,9 +5,14 @@ BUILD_DIR?=../build/
 include $(BUILD_DIR)/software/include/generated/variables.mak
 include $(SOC_DIRECTORY)/software/common.mak
 
-OBJECTS=main.o
+OBJ_DIR=.obj
+SRC_DIR=src
 
-CFLAGS = $(COMMONFLAGS)
+CSOURCES = $(wildcard $(SRC_DIR)/*.c)
+COBJS = $(addprefix $(OBJ_DIR)/, $(notdir $(CSOURCES:.c=.o)))
+OBJECTS = $(COBJS)
+
+CFLAGS = $(COMMONFLAGS) -Iinclude
 
 all: firmware.bin
 
@@ -29,16 +34,15 @@ firmware.elf: $(OBJECTS)
 		-lbase-nofloat -lcompiler_rt
 	chmod -x $@
 
-main.o: main.c
-	$(compile)
+$(OBJECTS): | $(OBJ_DIR)
 
-%.o: %.c
-	$(compile)
+$(OBJ_DIR):
+	mkdir $(OBJ_DIR)
 
-%.o: %.S
-	$(assemble)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	$(compile)
 
 clean:
-	$(RM) $(OBJECTS) $(OBJECTS:.o=.d) firmware.elf firmware.bin .*~ *~
+	$(RM) $(OBJECTS) $(OBJECTS:.o=.d) firmware.elf firmware.bin
 
 .PHONY: all main.o clean load

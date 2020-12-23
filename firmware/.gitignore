@@ -1,0 +1,5 @@
+.obj
+*.d
+*.o
+firmware.bin
+firmware.elf

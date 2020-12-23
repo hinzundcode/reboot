@@ -7,6 +7,8 @@
 #include <console.h>
 #include <generated/csr.h>
 
+#include <rgb.h>
+
 void isr() {
 	__attribute__((unused)) unsigned int irqs;
 
@@ -22,9 +24,15 @@ int main() {
 	irq_setmask(0);
 	irq_setie(1);
 	
+	rgb_init();
 	uart_init();
 	
-	for (;;) {
-		puts("hello\n");
-	}
+	rgb_set(RGB_LED0, 255, 0, 0);
+	rgb_set(RGB_LED1, 0, 255, 0);
+	rgb_set(RGB_LED2, 0, 0, 255);
+	rgb_set(RGB_LED3, 255, 255, 255);
+	
+	for (;;) {}
+		
+	//busy_wait(1000);
 }
