@@ -30,6 +30,7 @@ def main():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("--build", action="store_true")
 	parser.add_argument("--load", action="store_true")
+	parser.add_argument("--flash", action="store_true")
 	
 	builder_args(parser)
 	soc_core_args(parser)
@@ -47,12 +48,15 @@ def main():
 	builder = Builder(soc,
 		**builder_argdict(args))
 	
+	#print(trellis_argdict(args))
+	#exit()
+	
 	if args.build:
 		builder.build(**trellis_argdict(args), run=args.build)
 	
-	if args.load:
+	if args.load or args.flash:
 		prog = OpenFPGALoader("ecpix5")
-		prog.load_bitstream(os.path.join(builder.gateware_dir, soc.platform.name + ".bit"))
+		prog.load_bitstream(os.path.join(builder.gateware_dir, soc.platform.name + ".bit"), args.flash)
 
 if __name__ == "__main__":
 	main()
