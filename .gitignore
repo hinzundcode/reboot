@@ -1,1 +1,5 @@
-build
+/build
+/firmware/*.bin
+/firmware/*.elf
+/firmware/*.o
+/firmware/*.d
