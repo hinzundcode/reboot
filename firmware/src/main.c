@@ -20,18 +20,37 @@ void isr() {
 #endif
 }
 
+// from adafruit, https://learn.adafruit.com/florabrella/test-the-neopixel-strip
+void rgb_wheel(uint8_t led, uint8_t pos) {
+	if (pos < 85) {
+		rgb_set(led, pos * 3, 255 - pos * 3, 0);
+	} else if (pos < 170) {
+		pos -= 85;
+		rgb_set(led, 255 - pos * 3, 0, pos * 3);
+	} else {
+		pos -= 170;
+		rgb_set(led, 0, pos * 3, 255 - pos * 3);
+	}
+}
+void rgb_rainbow() {
+	uint8_t i = 0;
+	for (;;) {
+		i++;
+		
+		for (uint8_t led = 0; led < 4; led++) {
+			rgb_wheel(led, i + (4-led)*10);
+		}
+		busy_wait(20);
+	}
+}
+
 int main() {
 	irq_setmask(0);
 	irq_setie(1);
 	
 	uart_init();
 	
-	rgb_set(RGB_LED0, 20, 0, 0);
-	rgb_set(RGB_LED1, 0, 20, 0);
-	rgb_set(RGB_LED2, 0, 0, 20);
-	rgb_set(RGB_LED3, 20, 20, 20);
+	rgb_rainbow();
 	
 	for (;;) {}
-		
-	//busy_wait(1000);
 }
