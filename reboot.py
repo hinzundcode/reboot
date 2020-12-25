@@ -13,6 +13,8 @@ from litex.soc.cores.clock import *
 from litex.soc.integration.soc_core import *
 from litex.soc.integration.builder import *
 
+from litex.build.generic_platform import *
+
 from litedram.modules import MT41K256M16
 from litedram.phy import ECP5DDRPHY
 
@@ -22,7 +24,7 @@ from litex_boards.targets.ecpix5 import _CRG
 
 from litex.build.openfpgaloader import OpenFPGALoader
 
-from litex.soc.cores.gpio import GPIOOut
+from litex.soc.cores.gpio import GPIOIn, GPIOOut
 
 from platform import ECPIX545Platform
 
@@ -58,6 +60,17 @@ class SoC(SoCCore):
 		self.add_csr("rgb2")
 		self.submodules.rgb3 = RGBLed(platform.request("rgb_led", 3))
 		self.add_csr("rgb3")
+		
+		self.submodules.ps2_keyboard = GPIOIn(platform.request("ps2_keyboard", 0))
+		self.add_csr("ps2_keyboard")
+
+_io = [
+	("ps2_keyboard", 0,
+		Subsignal("clk", Pins("pmod3:5")),
+		Subsignal("data", Pins("pmod3:4")),
+		IOStandard("LVCMOS33"),
+	),
+]
 
 def main():
 	parser = argparse.ArgumentParser()
@@ -77,6 +90,7 @@ def main():
 	args = parser.parse_args()
 	
 	platform = ECPIX545Platform(toolchain="trellis")
+	platform.add_extension(_io)
 	soc = SoC(platform, **soc_core_argdict(args))
 	
 	builder = Builder(soc,
