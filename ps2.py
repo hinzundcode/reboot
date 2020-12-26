@@ -74,13 +74,13 @@ class PS2(Module):
 			error.eq(1)
 		)
 
-def testbench(clk, data):
+def testbench(pins):
 	def send_bit(bit):
-		yield data.eq(bit)
+		yield pins.data.eq(bit)
 		yield
-		yield clk.eq(0)
+		yield pins.clk.eq(0)
 		yield
-		yield clk.eq(1)
+		yield pins.clk.eq(1)
 		yield
 	
 	yield
@@ -91,18 +91,15 @@ def testbench(clk, data):
 	yield
 	yield
 	
-	yield clk.eq(1)
-	yield data.eq(1)
+	yield pins.clk.eq(1)
+	yield pins.data.eq(1)
 	yield
 	
 
 if __name__ == "__main__":
-	clk = Signal(reset=1)
-	data = Signal(reset=1)
-	class Pins():
-		def __init__(self, clk, data):
-			self.clk = clk
-			self.data = data
-	ps2 = PS2(Pins(clk, data))
-	
-	run_simulation(ps2, testbench(clk, data), vcd_name="ps2.vcd")
+	pins = Record([
+		("clk", 1),
+		("data", 1),
+	], reset=1)
+	ps2 = PS2(pins)
+	run_simulation(ps2, testbench(pins), vcd_name="ps2.vcd")
