@@ -11,32 +11,28 @@ class PS2(Module):
 		done = Signal()
 		error = Signal()
 		
+		clk_d = Signal()
+		clk_fall = Signal()
+		self.sync += clk_d.eq(pins.clk)
+		self.comb += clk_fall.eq(~pins.clk & clk_d)
+		
 		self.submodules.fsm = fsm = FSM(reset_state="IDLE")
 		fsm.act("IDLE",
 			idle.eq(1),
-			If(~pins.clk,
+			If(clk_fall,
 				NextValue(byte, 0),
 				NextValue(count, 0),
 				NextValue(parity, 0),
 				NextValue(xor_sum, 0),
-				NextState("WAIT-START-UP")
+				NextState("SAMPLE-BIT")
 			)
 		)
-		fsm.act("WAIT-START-UP",
-			If(pins.clk,
-				NextState("SAMPLE-BIT"))
-		)
 		fsm.act("SAMPLE-BIT",
-			If(~pins.clk,
+			If(clk_fall,
 				NextValue(byte, pins.data << 7 | byte >> 1),
 				NextValue(xor_sum, xor_sum ^ pins.data),
 				NextValue(count, count + 1),
-				NextState("WAIT-BIT-UP")
-			)
-		)
-		fsm.act("WAIT-BIT-UP",
-			If(pins.clk,
-				If(count == 0,
+				If(count == 7,
 					NextState("WAIT-PARITY")
 				).Else(
 					NextState("SAMPLE-BIT")
@@ -44,20 +40,12 @@ class PS2(Module):
 			)
 		)
 		fsm.act("WAIT-PARITY",
-			If(~pins.clk,
+			If(clk_fall,
 				NextValue(parity, pins.data),
-				NextState("WAIT-PARITY-UP"))
-		)
-		fsm.act("WAIT-PARITY-UP",
-			If(pins.clk,
 				NextState("WAIT-STOP"))
 		)
 		fsm.act("WAIT-STOP",
-			If(~pins.clk,
-				NextState("WAIT-STOP-UP"))
-		)
-		fsm.act("WAIT-STOP-UP",
-			If(pins.clk,
+			If(clk_fall,
 				# xor_sum is 0 on even number of ones
 				# ps2 parity bit is 1 on even number of ones
 				If(parity == xor_sum,
