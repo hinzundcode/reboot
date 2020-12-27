@@ -50,7 +50,18 @@ int main() {
 	
 	uart_init();
 	
-	rgb_rainbow();
+	//rgb_rainbow();
+	
+	for (;;) {
+		while (!ps2_keyboard_status_done_read());
+		if (ps2_keyboard_status_error_read()) {
+			puts("error");
+		}
+		uint8_t byte = ps2_keyboard_data_read();
+		ps2_keyboard_control_write(1);
+		
+		printf("%x\n", byte);
+	}
 	
 	for (;;) {}
 }

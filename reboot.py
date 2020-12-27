@@ -29,6 +29,7 @@ from litex.soc.cores.gpio import GPIOIn, GPIOOut
 from platform import ECPIX545Platform
 
 from rgb import RGBLed
+from ps2 import PS2
 
 class SoC(SoCCore):
 	def __init__(self, platform, sys_clk_freq=int(75e6), **kwargs):
@@ -52,6 +53,8 @@ class SoC(SoCCore):
 				l2_cache_reverse        = True
 		)
 		
+		self.add_uartbone("serial", baudrate=3e6)
+		
 		self.submodules.rgb0 = RGBLed(platform.request("rgb_led", 0))
 		self.add_csr("rgb0")
 		self.submodules.rgb1 = RGBLed(platform.request("rgb_led", 1))
@@ -61,13 +64,20 @@ class SoC(SoCCore):
 		self.submodules.rgb3 = RGBLed(platform.request("rgb_led", 3))
 		self.add_csr("rgb3")
 		
-		self.submodules.ps2_keyboard = GPIOIn(platform.request("ps2_keyboard", 0))
+		keyboard_pins = platform.request("ps2_keyboard")
+		self.submodules.ps2_keyboard = PS2(keyboard_pins)
 		self.add_csr("ps2_keyboard")
 
 _io = [
 	("ps2_keyboard", 0,
 		Subsignal("clk", Pins("pmod3:5")),
 		Subsignal("data", Pins("pmod3:4")),
+		IOStandard("LVCMOS33"),
+	),
+	
+	("serial_external", 0,
+		Subsignal("rx", Pins("pmod2:1")),
+		Subsignal("tx", Pins("pmod2:0")),
 		IOStandard("LVCMOS33"),
 	),
 ]
@@ -84,7 +94,8 @@ def main():
 	
 	parser.set_defaults(
 		output_dir="build",
-		csr_csv="build/csr.csv"
+		csr_csv="build/csr.csv",
+		uart_name="serial_external",
 	)
 	
 	args = parser.parse_args()

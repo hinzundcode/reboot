@@ -1,66 +1,99 @@
 from migen import *
+from migen.genlib.cdc import MultiReg
+from litex.soc.interconnect.csr import *
 
-class PS2(Module):
+class PS2(Module, AutoCSR):
 	def __init__(self, pins):
-		byte = Signal(8)
-		count = Signal(3)
-		parity = Signal()
-		xor_sum = Signal()
+		self.value = Signal(8)
+		self.count = Signal(3)
 		
-		idle = Signal()
-		done = Signal()
-		error = Signal()
+		self.done = Signal()
+		self.error = Signal()
+		self.clear = Signal()
 		
-		clk_d = Signal()
-		clk_fall = Signal()
-		self.sync += clk_d.eq(pins.clk)
-		self.comb += clk_fall.eq(~pins.clk & clk_d)
+		self.parity = Signal()
+		self.xor_sum = Signal()
+		
+		self.clock = Signal(reset=1)
+		self.data = Signal(reset=1)
+		self.falling = Signal()
+		
+		self.specials += [
+			MultiReg(pins.clk, self.clock, reset=1),
+			MultiReg(pins.data, self.data, reset=1),
+		]
+		
+		clock_s = Signal(reset=1)
+		clock_r = Signal(reset=1)
+		self.sync += [
+			clock_s.eq(self.clock),
+			clock_r.eq(clock_s),
+			self.falling.eq(~clock_r & clock_s),
+		]
 		
 		self.submodules.fsm = fsm = FSM(reset_state="IDLE")
 		fsm.act("IDLE",
-			idle.eq(1),
-			If(clk_fall,
-				NextValue(byte, 0),
-				NextValue(count, 0),
-				NextValue(parity, 0),
-				NextValue(xor_sum, 0),
+			If(self.falling,
 				NextState("SAMPLE-BIT")
 			)
 		)
 		fsm.act("SAMPLE-BIT",
-			If(clk_fall,
-				NextValue(byte, pins.data << 7 | byte >> 1),
-				NextValue(xor_sum, xor_sum ^ pins.data),
-				NextValue(count, count + 1),
-				If(count == 7,
+			If(self.falling,
+				NextValue(self.value, self.data << 7 | self.value >> 1),
+				NextValue(self.xor_sum, self.xor_sum ^ self.data),
+				If(self.count == 7,
 					NextState("WAIT-PARITY")
 				).Else(
+					NextValue(self.count, self.count + 1),
 					NextState("SAMPLE-BIT")
 				)
 			)
 		)
 		fsm.act("WAIT-PARITY",
-			If(clk_fall,
-				NextValue(parity, pins.data),
+			If(self.falling,
+				NextValue(self.parity, self.data),
 				NextState("WAIT-STOP"))
 		)
 		fsm.act("WAIT-STOP",
-			If(clk_fall,
+			If(self.falling,
 				# xor_sum is 0 on even number of ones
 				# ps2 parity bit is 1 on even number of ones
-				If(parity == xor_sum,
-					NextState("ERROR")
-				).Else(
-					NextState("DONE")
-				)
+				If(self.parity == self.xor_sum,
+					NextValue(self.error, 1)
+				),
+				NextState("DONE")
 			)
 		)
 		fsm.act("DONE",
-			done.eq(1)
+			self.done.eq(1),
+			If(self.clear,
+				NextValue(self.value, 0),
+				NextValue(self.count, 0),
+				NextValue(self.parity, 0),
+				NextValue(self.xor_sum, 0),
+				NextValue(self.error, 0),
+				NextState("IDLE")
+			)
 		)
-		fsm.act("ERROR",
-			error.eq(1)
-		)
+		
+		self.add_csr()
+	
+	def add_csr(self):
+		self._status = CSRStatus(fields=[
+			CSRField("done", size=1, offset=0),
+			CSRField("error", size=1, offset=1),
+		])
+		self._control = CSRStorage(fields=[
+			CSRField("clear", size=1, offset=0, pulse=True),
+		])
+		self._data = CSRStatus(8)
+		
+		self.comb += [
+			self._status.fields.done.eq(self.done),
+			self._status.fields.error.eq(self.error),
+			self._data.status.eq(self.value),
+			self.clear.eq(self._control.fields.clear),
+		]
 
 def testbench(pins):
 	def send_bit(bit):
