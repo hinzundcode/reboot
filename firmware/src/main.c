@@ -8,16 +8,20 @@
 #include <generated/csr.h>
 
 #include <rgb.h>
+#include <ps2_keyboard.h>
 
 void isr() {
 	__attribute__((unused)) unsigned int irqs;
 
 	irqs = irq_pending() & irq_getmask();
-
+	
 #ifndef UART_POLLING
-	if(irqs & (1 << UART_INTERRUPT))
+	if (irqs & (1 << UART_INTERRUPT))
 		uart_isr();
 #endif
+	
+	if (irqs & (1 << PS2_KEYBOARD_INTERRUPT))
+		ps2_keyboard_isr();
 }
 
 // from adafruit, https://learn.adafruit.com/florabrella/test-the-neopixel-strip
@@ -50,17 +54,15 @@ int main() {
 	
 	uart_init();
 	
+	ps2_keyboard_init();
+	
 	//rgb_rainbow();
 	
 	for (;;) {
-		while (!ps2_keyboard_status_done_read());
-		if (ps2_keyboard_status_error_read()) {
-			puts("error");
+		uint8_t data = ps2_keyboard_read();
+		if (data) {
+			printf("keyboard: %X\n", data);
 		}
-		uint8_t byte = ps2_keyboard_data_read();
-		ps2_keyboard_control_write(1);
-		
-		printf("%x\n", byte);
 	}
 	
 	for (;;) {}

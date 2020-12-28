@@ -1,6 +1,7 @@
 from migen import *
 from migen.genlib.cdc import MultiReg
 from litex.soc.interconnect.csr import *
+from litex.soc.interconnect.csr_eventmanager import EventManager, EventSourceLevel
 
 class PS2(Module, AutoCSR):
 	def __init__(self, pins):
@@ -30,6 +31,10 @@ class PS2(Module, AutoCSR):
 			clock_r.eq(clock_s),
 			self.falling.eq(~clock_r & clock_s),
 		]
+		
+		self.submodules.ev = EventManager()
+		self.ev.data = EventSourceLevel()
+		self.ev.finalize()
 		
 		self.submodules.fsm = fsm = FSM(reset_state="IDLE")
 		fsm.act("IDLE",
@@ -66,6 +71,7 @@ class PS2(Module, AutoCSR):
 		)
 		fsm.act("DONE",
 			self.done.eq(1),
+			self.ev.data.trigger.eq(1),
 			If(self.clear,
 				NextValue(self.value, 0),
 				NextValue(self.count, 0),
