@@ -72,7 +72,7 @@ class PS2(Module, AutoCSR):
 		fsm.act("DONE",
 			self.done.eq(1),
 			self.ev.data.trigger.eq(1),
-			If(self.clear,
+			If(self.ev.data.clear,
 				NextValue(self.value, 0),
 				NextValue(self.count, 0),
 				NextValue(self.parity, 0),
@@ -86,19 +86,13 @@ class PS2(Module, AutoCSR):
 	
 	def add_csr(self):
 		self._status = CSRStatus(fields=[
-			CSRField("done", size=1, offset=0),
-			CSRField("error", size=1, offset=1),
+			CSRField("data", size=8, offset=0),
+			CSRField("valid", size=1, offset=8),
 		])
-		self._control = CSRStorage(fields=[
-			CSRField("clear", size=1, offset=0, pulse=True),
-		])
-		self._data = CSRStatus(8)
 		
 		self.comb += [
-			self._status.fields.done.eq(self.done),
-			self._status.fields.error.eq(self.error),
-			self._data.status.eq(self.value),
-			self.clear.eq(self._control.fields.clear),
+			self._status.fields.valid.eq(self.done & ~self.error),
+			self._status.fields.data.eq(self.value),
 		]
 
 def testbench(pins):
