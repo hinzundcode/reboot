@@ -60,12 +60,8 @@ int main() {
 	//rgb_rainbow();
 	
 	for (;;) {
-		/*uint8_t data = ps2_keyboard_read();
-		if (data) {
-			printf("keyboard: %X\n", data);
-		}*/
-		
-		keyboard_service();
+		char c = keyboard_read_blocking();
+		printf("%c", c);
 	}
 	
 	for (;;) {}

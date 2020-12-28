@@ -106,5 +106,7 @@
 #define KEY_SCROLL_LOCK 0x17E
 
 void keyboard_service();
+char keyboard_read();
+char keyboard_read_blocking();
 
 #endif
