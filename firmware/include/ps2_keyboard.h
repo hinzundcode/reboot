@@ -6,5 +6,6 @@
 void ps2_keyboard_init();
 void ps2_keyboard_isr();
 uint8_t ps2_keyboard_read();
+uint8_t ps2_keyboard_read_blocking();
 
 #endif

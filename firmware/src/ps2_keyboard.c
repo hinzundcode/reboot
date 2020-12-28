@@ -41,3 +41,8 @@ uint8_t ps2_keyboard_read() {
 	buffer_consume = (buffer_consume + 1) & PS2_KEYBOARD_BUFFER_MASK;
 	return data;
 }
+
+uint8_t ps2_keyboard_read_blocking() {
+	while (buffer_consume == buffer_produce);
+	return ps2_keyboard_read();
+}
