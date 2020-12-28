@@ -154,6 +154,11 @@ static char keymap_get_input(uint16_t key, bool key_states[]) {
 	
 	bool shift = key_states[KEY_LEFT_SHIFT] || key_states[KEY_RIGHT_SHIFT];
 	bool alt = key_states[KEY_LEFT_META] || key_states[KEY_RIGHT_META];
+	bool ctrl = key_states[KEY_LEFT_CTRL] || key_states[KEY_RIGHT_CTRL];
+	
+	if (ctrl) {
+		return 0;
+	}
 	
 	if (shift && alt) {
 		return keymap_shift_alt[key];
