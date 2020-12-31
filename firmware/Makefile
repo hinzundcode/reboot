@@ -10,7 +10,9 @@ SRC_DIR=src
 
 CSOURCES = $(wildcard $(SRC_DIR)/*.c)
 COBJS = $(addprefix $(OBJ_DIR)/, $(notdir $(CSOURCES:.c=.o)))
-OBJECTS = $(COBJS)
+ASMSOURCES = $(wildcard $(SRC_DIR)/*.S)
+ASMOBJS = $(addprefix $(OBJ_DIR)/, $(notdir $(ASMSOURCES:.S=.o)))
+OBJECTS = $(COBJS) $(ASMOBJS)
 
 CFLAGS = $(COMMONFLAGS) -Iinclude
 
@@ -41,6 +43,9 @@ $(OBJ_DIR):
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(compile)
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.S
+	$(assemble)
 
 clean:
 	$(RM) $(OBJECTS) $(OBJECTS:.o=.d) firmware.elf firmware.bin
