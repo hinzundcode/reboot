@@ -55,6 +55,8 @@ class SoC(SoCCore):
 		
 		self.add_uartbone("serial", baudrate=3e6)
 		
+		self.register_mem("vexriscv_debug", 0xf00f0000, self.cpu.debug_bus, 0x100)
+		
 		self.submodules.rgb0 = RGBLed(platform.request("rgb_led", 0))
 		self.add_csr("rgb0")
 		self.submodules.rgb1 = RGBLed(platform.request("rgb_led", 1))
@@ -96,6 +98,7 @@ def main():
 		output_dir="build",
 		csr_csv="build/csr.csv",
 		uart_name="serial_external",
+		cpu_variant="standard+debug",
 	)
 	
 	args = parser.parse_args()
